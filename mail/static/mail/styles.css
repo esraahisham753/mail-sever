@@ -1,3 +1,31 @@
 textarea {
     min-height: 400px;
 }
+
+.email {
+    border: 0.1rem solid #ccc;
+    padding: 2rem;
+    margin: 2rem 0;
+    width: 80%;
+    border-radius: 0.5rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.email-read {
+    background-color: #BCCCDC;
+}
+
+
+.email-unread {
+    background-color: white;
+}
+
+.email .email-sender {
+    font-weight: bold;
+}
+
+.email .email-timestamp {
+    color: #999;
+}
