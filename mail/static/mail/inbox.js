@@ -23,6 +23,7 @@ function compose_email() {
 
   // Show compose view and hide other views
   document.querySelector('#emails-view').style.display = 'none';
+  document.querySelector('#email-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
 
   // Clear out composition fields
@@ -36,6 +37,7 @@ function load_mailbox(mailbox) {
   // Show the mailbox and hide other views
   document.querySelector('#emails-view').style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
+  document.querySelector('#email-view').style.display = 'none';
 
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
@@ -56,9 +58,9 @@ function load_mailbox(mailbox) {
         </div>
         <div class="email-timestamp">${email.timestamp}</div>
       `;
-      /*emailDiv.addEventListener('click', () => {
-        load_email(email.id);
-      });*/
+      emailDiv.addEventListener('click', () => {
+        emailOnclick(email.id);
+      });
       document.querySelector('#emails-view').appendChild(emailDiv);
     });
   });
@@ -84,4 +86,33 @@ function composeFormSubmit() {
 
   // Prevent the form from submitting
   return false;
+}
+
+function emailOnclick(emailId) {
+  fetch(`/emails/${emailId}`)
+  .then(response => response.json())
+  .then(email => {
+    // Show the email
+    document.querySelector('#email-view').innerHTML = `
+      <div>
+        <p class="email-sender"><strong>From:</strong> ${email.sender}</p>
+        <p class="email-recipients"><strong>To:</strong> ${email.recipients.join(', ')}</p>
+        <p class="email-subject"><strong>Subject:</strong> ${email.subject}</p>
+        <p class="email-timestamp"><strong>Timestamp:</strong> ${email.timestamp}</p>
+        <button class="btn btn-sm btn-outline-primary">Reply</button>
+      </div>
+      <hr>
+      <div class="email-body">${email.body}</div>
+    `;
+  });
+
+  fetch(`/emails/${emailId}`, {
+    method: 'PUT',
+    body: JSON.stringify({
+      read: true
+  })});
+
+  document.querySelector('#emails-view').style.display = 'none';
+  document.querySelector('#email-view').style.display = 'block';
+  document.querySelector('#compose-view').style.display = 'none';
 }
