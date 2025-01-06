@@ -59,7 +59,7 @@ function load_mailbox(mailbox) {
         <div class="email-timestamp">${email.timestamp}</div>
       `;
       emailDiv.addEventListener('click', () => {
-        emailOnclick(email.id);
+        emailOnclick(email.id, mailbox);
       });
       document.querySelector('#emails-view').appendChild(emailDiv);
     });
@@ -88,7 +88,10 @@ function composeFormSubmit() {
   return false;
 }
 
-function emailOnclick(emailId) {
+function emailOnclick(emailId, mailbox) {
+  const archiveButton = mailbox === 'inbox' ? `<button id="archive" class="btn btn-sm btn-outline-primary">Archive</button>` : '';
+  const unarchiveButton = mailbox === 'archive' ? `<button id="unarchive" class="btn btn-sm btn-outline-primary">Unarchive</button>` : '';
+
   fetch(`/emails/${emailId}`)
   .then(response => response.json())
   .then(email => {
@@ -99,11 +102,41 @@ function emailOnclick(emailId) {
         <p class="email-recipients"><strong>To:</strong> ${email.recipients.join(', ')}</p>
         <p class="email-subject"><strong>Subject:</strong> ${email.subject}</p>
         <p class="email-timestamp"><strong>Timestamp:</strong> ${email.timestamp}</p>
-        <button class="btn btn-sm btn-outline-primary">Reply</button>
+        <button id="reply" class="btn btn-sm btn-outline-primary">Reply</button>
+        ${archiveButton}
+        ${unarchiveButton}
       </div>
       <hr>
       <div class="email-body">${email.body}</div>
     `;
+
+    if(archiveButton) {
+      //console.log(archiveButton);
+      document.querySelector('#archive').addEventListener('click', () => {
+        fetch(`/emails/${emailId}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            archived: true
+        })});
+        load_mailbox('inbox');
+      });
+    } else if(unarchiveButton) {
+      document.querySelector('#unarchive').addEventListener('click', () => {
+        fetch(`/emails/${emailId}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            archived: false
+        })});
+        load_mailbox('inbox');
+      });
+    } 
+    
+    document.querySelector('#reply').addEventListener('click', () => {
+      compose_email();
+      document.querySelector('#compose-recipients').value = email.sender;
+      document.querySelector('#compose-subject').value = email.subject.startsWith('Re: ') ? email.subject : `Re: ${email.subject}`;
+      document.querySelector('#compose-body').value = `On ${email.timestamp} ${email.sender} wrote: ${email.body}`;
+    });
   });
 
   fetch(`/emails/${emailId}`, {
@@ -111,6 +144,7 @@ function emailOnclick(emailId) {
     body: JSON.stringify({
       read: true
   })});
+
 
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#email-view').style.display = 'block';
